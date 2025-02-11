@@ -2,7 +2,6 @@ import whisper
 import sounddevice as sd
 import numpy as np
 import scipy.io.wavfile as wavfile
-import ffmpeg
 
 def speech_to_text():
     STTmodel = whisper.load_model('small.en')
