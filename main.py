@@ -1,1 +1,1 @@
-print("hello world")
+# Running main script from here
