@@ -14,7 +14,7 @@ stream = chat(
         {'role': 'user', 'content': user_input}
     ],
     stream=True,
-    options={  # ✅ Define parameters inside "options"
+    options={
         "temperature": 0.7,  # Higher values (0.7-1.0) make responses more creative
         "top_p": 0.9,  # Limits token sampling diversity
     }
