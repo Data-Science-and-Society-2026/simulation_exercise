@@ -15,9 +15,7 @@ ifeq ($(UNAME_S),Darwin)
 else
 	@echo "Detected Windows (or non-Darwin). Checking for Chocolatey..."
 
-	chmod +x Makefiles/windows/system_dependencies.ps1
-	./Makefiles/darwin/system_dependencies.sh
-
+	powershell.exe -NoProfile -ExecutionPolicy Bypass -File "Makefiles\windows\system_dependencies.ps1"
 
 	@echo "Setup complete on Windows!"
 endif
