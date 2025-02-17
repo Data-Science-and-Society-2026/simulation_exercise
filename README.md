@@ -1,32 +1,22 @@
 # Simulation Exercise
 
-## Getting started
-To get started with the project you first have to clone the repository into your local machine.Of course to be able to do so you need top install git in your machine. If on mac, you already have it installed, on windows have a look at https://git-scm.com/downloads. After that, to have the code in your local machine you can run:
+<details><summary><h2>Project Setup</h2></summary>
 
-```bash
-git clone git@github.com:Data-Science-and-Society-2026/simulation_exercise.git
-git clone https://github.com/Data-Science-and-Society-2026/simulation_exercise.git
-```
-
-<details>
-  <summary><h2>Project Setup</h2></summary>
-
-  To be able to have all of the required dependenciees run:
-  ```bash
-  make python_deps
-  ```
-  It requires [uv](https://docs.astral.sh/uv/). If you dont have a package manager you can also run :
+  To run the project locally you can first run:
   ```bash
   make setup
   ```
-  This will install for `MacOs` users [hommebrew](https://brew.sh/) and `uv`. If `Windows` user it will intall [chocolatey](https://chocolatey.org/) and `uv`
+  This will install for `MacOs` users [homebrew](https://brew.sh/) and [uv](https://docs.astral.sh/uv/). If  you are a `Windows` user it will install [chocolatey](https://chocolatey.org/) and `uv`.
+  If you already have a package manager and `uv` already installed,to be able to have all of the required dependencies run:
 
+  ```bash
+  make python_deps
+  ```
+  or the same:
 
-  Once installed, to have get the python dependencies you can run:
   ```bash
   uv sync
   ```
+  If an enviroment existed already it will update the dependencies. If one did not exist, it will create it and populate it.
   Check [uv documentation](https://docs.astral.sh/uv/getting-started/features/) for more information
-
-
 </details>
