@@ -1,4 +1,15 @@
 # Simulation Exercise
+This exercise is about making an AI tutor that can help students while studying. The project exists of a few project groups:
+- Speach to text & Text to speech
+-- Make sure the AI can understand the user and can talk back to the user
+- AI - RAG
+-- Make a model that can help the user with their questions while using documents
+- VR - Avatar
+-- Making a virtual avatar that can help the user with their questions and make it more interactive
+- Integration and Git
+-- Making sure all the tools can work together and that the project is well documented
+- DPIA and GDPR
+-- Making sure the project is GDPR compliant and think about ethical issues
 
 <details><summary><h2>Project Setup</h2></summary>
 
