@@ -16,8 +16,7 @@ embeddings = OllamaEmbeddings(model="nomic-embed-text")  # Ensure a valid embedd
 
 # ---- 2. Load Multiple PDFs & Process Them ----
 pdf_paths = [
-    r"/Users/macbook/Desktop/BCs Data Science and Society/Term 4a/Simulation Exercise/information-14-00152.pdf",
-    r"/Users/macbook/Desktop/BCs Data Science and Society/Term 4a/Simulation Exercise/The_Manifesto_Corpus_A_new_resource_for_research_o.pdf"
+    "put path here"
 ]
 
 all_pages = []
