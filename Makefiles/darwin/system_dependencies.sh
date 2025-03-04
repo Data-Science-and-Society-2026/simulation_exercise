@@ -8,6 +8,10 @@ if ! which brew > /dev/null ; then
     source ~/.zprofile
 fi
 
+echo >> ~/.bash_profile # adding to path
+echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.bash_profile
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
 echo "Updating homebrew..."
 brew update && brew upgrade
 
