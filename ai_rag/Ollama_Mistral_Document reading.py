@@ -17,7 +17,7 @@ embeddings = OllamaEmbeddings(model="nomic-embed-text")
 # ---- 2. Load Multiple PDFs & Process Them ----
 pdf_folder = os.getenv(
     "PDF_FOLDER",
-    r"/Users/macbook/Desktop/BCs Data Science and Society/Term 4a/Simulation Exercise/simulation_exercise-1/ai_rag/pdf_folder",
+    r"ai_rag/pdf_folder",
 )
 pdf_paths = [os.path.join(pdf_folder, file) for file in os.listdir(pdf_folder) if file.endswith(".pdf")]
 
