@@ -44,20 +44,23 @@ for url in video_urls:
     audio_file = f"{clean_title}.mp3"
     transcript_file = os.path.join(pdf_folder, f"{clean_title}.txt")
 
+    if os.path.exists(transcript_file):
+        print(f"✅ Transcript already exists: {transcript_file}")
+        continue
+
     # Download audio
     print("⏳ Downloading audio...")
     subprocess.run(["yt-dlp", "-x", "--audio-format", "mp3", "-o", audio_file, url], check=True)
 
     # Transcribe using Whisper
     print("🎙️ Transcribing with Whisper...")
-    subprocess.run(["whisper", audio_file, "--model", "small"], check=True)
+    subprocess.run(["whisper", audio_file, "--model", "small", "--output_format", "txt"], check=True)
 
-    # Read Whisper output
+    # Save transcript
     whisper_output_file = audio_file.replace(".mp3", ".txt")
     with open(whisper_output_file, "r") as f:
         transcript_text = f.read()
 
-    # Save transcript
     with open(transcript_file, "w") as f:
         f.write(transcript_text)
 
