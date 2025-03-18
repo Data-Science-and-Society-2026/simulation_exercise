@@ -1,0 +1,71 @@
+Hello everyone, welcome to new tutorial on programming knowledge. So today we are going
+to work with NLTK. So NLTK is basically a PIP package. So PIP is a Python package manager
+and NLTK is a PIP package, which is a Python package used for natural language text processing.
+So basically you will find all the powerful Python commands and algorithms and like tools
+and libraries inside NLTK so and you can refer to like various topics such as text mining
+and natural language processing using NLTK. So basically you can advance yourself to
+text learning and also provide some machine learning algorithms using NLTK. So let's get
+started with today's tutorial. So the first command you need to install inside your machine
+is PIP install NLTK. So this would install NLTK on your machines and since it says requirement
+already satisfied because I've already installed the NLTK package inside your inside my machine
+so it says requirement already satisfied. Then next you can do you can do import NLTK
+and you can type NLTK.download. So this is like since I just want to make clear that
+since PIP is a Python package manager, in the same way NLTK.download is a package manager
+for NLTK itself. So when I run this file, so I can do Python 1.py. Since I have saved
+this file using 1.py, so it suddenly opens the NLTK.downloader. So this is a package
+manager for NLTK itself. So you can install all the modules and packages here by clicking
+by selecting them and click on the download. One you should install before this tutorial
+is this punked manager. So how you can install simply what you can do, you just keep the
+identifier here since punked is the identifier for the punked tokenizer model. So what you
+can do, you can do download, you can type the like identifier and when you run this,
+so it will install the specifically the same. So when I run this file, it will download
+and it says downloading package punked and punked package is already up to date. Another
+you can do either you specify the name or what you can do, you can simply run Python
+1.py and you can like run all the pack, you can download all the packages from here. Okay,
+so you can click on this corpora models and all packages and either clip them, click them,
+you can also select them and click on download and you can click here for refresh. The another
+way is I've already told you that you can mention the package. So let's start with tokenization
+today. So tokenization is a very basic concept. Okay, this is a text which is in the triple
+quotes. Okay, so make sure you observe this. This is in triple quotes and it has a space
+after every dot like this. This is the way we are handling this. Okay, now what you can
+do, you can do the first you can do from nntk.tokenize import word underscore tokenize and print word
+underscore tokenize text. Okay, now let's run this. So I'll come in this and I'll move
+to this part. So let's run this and I'll do type Python 1.py and let's start this. So here you
+can see that all words have been separated. So this is the word tokenization. Okay, now let's
+come in this. Now let's move with another one. So you can do from nntk.tokenize import
+sent underscore tokenize and now you can see this word I will do print sent underscore
+tokenize text. Okay, so yeah, now you can run this. And here you can say welcome you to
+programming knowledge. Let's start with the first written nntk. We shall learn the basis of nntk
+here. So you can see now the sentence tokenization has been observed. So achieve another thing you
+can do. Okay, so like what you can do. So you can do from nntk.nltk.probability. So you can type
+and so I'm not sure that this packet has been installed. So if it throws an error, we would
+resolve this. Probability import frequent distribution. Okay, so this and then I would do it frequent
+distribution. Okay, so this takes a parameter as tokenized words. Okay, so let's, okay, I'll do
+this. What I can do, I'll comment, I'll what I'll do. This should be inside tokenized word
+underscore tokenize is equal to word underscore tokenize and I'll pass text. Okay, and I'll
+also comment this out. So and this would take this as a parameter word underscore tokenize. So make
+sure you notice a different this is word underscore tokenize and this is good to go now. Okay, let's
+run this. Yeah, so with frequency distribution with 21 samples and 24 outcomes. Okay, so this is
+the it shows and you can type a function what I can show you, you can even store this inside the
+variable fd. Okay, and yeah, so now you can install the source in the variable fd and you can type
+fd.most underscore common. And how much common you need to find either you can find the utmost
+most two common or most three common. So let's do most three common. Okay, so let's run this. Now you
+can see. So it says dot is the most common entity gives it to and welcome. So this is a stop word.
+And in future context, we will refer how to move this talks stop words because they are of no use.
+Okay, so another thing you can install is a Python package which is pip install matplotlib. Okay,
+matplotlib. So you can do pip install matplotlib. So this will install the matplotlib on your local
+machine. And like, you can read this to for a second to over. And this is like the noise
+computer. Okay, so you can import this on the top import matplotlib.pyplot as plot. Okay,
+so you can matplotlib.pyplot as plot. And then you can what you can do. So then you can what you
+can do. You can sense you can frequency fd dot plot. Okay, plot. And you can do
+30 as a scale and cumulative is equal to false. Okay, and then you can do plot dot show. Okay,
+so now it's good to go. And then we can run this. Okay, and let's run this. Okay, now we're running.
+So, so this may take a moment. So now you can see that since like it was building the font
+cache, this may take a moment. So, so this is the graph it has plot. So like, this is like the
+frequency is the one and the frequency NLTK. Like, so this is how we have achieved this. So
+like, I told you that dot had a frequency of three, and NLTK of two welcome with one. So NLTK
+refer to the three frequency and the sorry, the dot refer to the three frequency, NLTK refer to
+the frequency of two. So this is the scale you can see. Okay, and this is how we achieve this.
+And this is the graph you can plot. Okay, so this is like NLTK refers to the frequency of two dot
+frequency of three. And this is we achieve this. So this is the most interesting and basic
+tutorials. So I'll get you in the next tutorial. So thank you everyone for watching this. Thank you.
