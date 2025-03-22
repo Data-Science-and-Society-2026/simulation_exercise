@@ -4,7 +4,8 @@ import numpy as np
 import scipy.io.wavfile as wavfile
 from TTS.api import TTS
 import torch
-import collections
+import re
+import os
 
 if torch.cuda.is_available():
     device_name = torch.cuda.get_device_name(0)
@@ -21,12 +22,14 @@ def speech_to_text():
     sd.wait(5)
     wavfile.write("STTaudio.wav", 44100, STTrecording)
     STTresult = STTmodel.transcribe("STTaudio.wav")
+    os.remove("STTaudio.wav")
+    print(STTresult["text"])
     return STTresult["text"]
 
 def text_to_speech(text):
-
+    sentences = re.split(r'(?<=[.!?]) +', text)
     # Init TTS with the target model name
-    tts = TTS(model_name="tts_models/en/ek1/tacotron2", progress_bar=False).to(tts_processor)
-
-    # Run TTS
-    tts.tts_to_file(text=text, file_path="TTSaudio.wav")
+    tts = TTS(model_name="tts_models/en/ljspeech/tacotron2-DDC", progress_bar=False).to(tts_processor)
+    for sentence in sentences:
+        audio = tts.tts(sentence)
+        sd.play(audio, samplerate=22050, blocking=True)
