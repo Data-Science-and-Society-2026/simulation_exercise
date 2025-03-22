@@ -6,6 +6,14 @@ from TTS.api import TTS
 import torch
 import collections
 
+if torch.cuda.is_available():
+    device_name = torch.cuda.get_device_name(0)
+    print(f"CUDA is available! Using GPU: {device_name}")
+    tts_processor = "cuda"
+else:
+    print("CUDA is not available. Using CPU.")
+    tts_processor = "cpu"
+
 def speech_to_text():
     STTmodel = whisper.load_model('small.en')
     print("Please speak now")
@@ -16,11 +24,9 @@ def speech_to_text():
     return STTresult["text"]
 
 def text_to_speech(text):
-    
-    torch.serialization.add_safe_globals([dict, collections.defaultdict])
 
     # Init TTS with the target model name
-    tts = TTS(model_name="tts_models/en/ek1/tacotron2", progress_bar=False).to("cpu")
+    tts = TTS(model_name="tts_models/en/ek1/tacotron2", progress_bar=False).to(tts_processor)
 
     # Run TTS
     tts.tts_to_file(text=text, file_path="TTSaudio.wav")
