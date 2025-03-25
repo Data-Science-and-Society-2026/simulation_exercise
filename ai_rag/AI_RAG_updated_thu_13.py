@@ -1,101 +1,154 @@
-from ollama import chat
+import os
+import time
+import subprocess
+import re
 from langchain_community.llms import Ollama
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.prompts import PromptTemplate
 from langchain_community.vectorstores import DocArrayInMemorySearch
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_core.output_parsers import StrOutputParser
-from langchain.schema import Document
-import os
-import time
-import re
-import subprocess
-from functools import lru_cache
+from langchain_core.documents import Document
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from difflib import get_close_matches
+from typing import List
+from collections import defaultdict
 
-# ---- 1. Load Ollama Model & Embeddings ----
-llm = Ollama(model="mistral")
+
+# ---- 1. LOAD OLLAMA MODEL & EMBEDDINGS ----
+llm = Ollama(model="mistral", temperature=0.3)
 embeddings = OllamaEmbeddings(model="nomic-embed-text")
 
-# List of YouTube video URLs
-video_urls = [
+
+# ---- 2. YOUYUBE VIDEO HANDLING ----
+# Optional: Add your YouTube URLs here or leave the list empty
+youtube_urls = [
     "https://www.youtube.com/watch?v=LQQbW3Pve5U",
     "https://www.youtube.com/watch?v=LLl3bQXhhzI",
     "https://www.youtube.com/watch?v=L8jWbCxvrOU",
     "https://www.youtube.com/watch?v=XFoehWRzG-I",
 ]
 
-# Set paths
-pdf_folder = "ai_rag/pdf_folder"
-os.makedirs(pdf_folder, exist_ok=True)
-
-# Function to clean video title for filenames
+# Utilities for filenames & citations
 def clean_filename(title):
-    return re.sub(r'[\\/*?:"<>|]', "", title).replace(" ", "_")
+    return re.sub(r'[\\/*?:"<>|]', "", title).replace(" ", "_") # Cleans up a string so it can safely be used as a filename across different operating systems
 
-# Process each video
-for url in video_urls:
-    print(f"\n🔹 Processing video: {url}")
+def generate_youtube_citation(title, url):
+    return f"{title}. (n.d.). Retrieved from {url}" # Generates a basic APA-style citation string for a YouTube video
 
-    # Get video title
-    print("📌 Fetching video title...")
-    result = subprocess.run(["yt-dlp", "--get-title", url], capture_output=True, text=True)
-    video_title = result.stdout.strip()
-    clean_title = clean_filename(video_title)
+# Transcribe and process YouTube videos
+def process_youtube_videos(urls: List[str], output_dir: str) -> List[Document]:
+    video_chunks = []
 
-    # Define filenames
-    audio_file = f"{clean_title}.mp3"
-    transcript_file = os.path.join(pdf_folder, f"{clean_title}.txt")
+    for url in urls:
+        print(f"\n🎥 Processing video: {url}")
+        result = subprocess.run(["yt-dlp", "--get-title", url], capture_output=True, text=True)
+        video_title = result.stdout.strip()
+        safe_title = clean_filename(video_title)
 
-    if os.path.exists(transcript_file):
-        print(f"✅ Transcript already exists: {transcript_file}")
-        continue
+        # Define file paths for audio and transcript
+        mp3_file = f"{safe_title}.mp3"
+        txt_file = os.path.join(output_dir, f"{safe_title}.txt")
 
-    # Download audio
-    print("⏳ Downloading audio...")
-    subprocess.run(["yt-dlp", "-x", "--audio-format", "mp3", "-o", audio_file, url], check=True)
+        # If transcript already exists, skip downloading and transcribing
+        if os.path.exists(txt_file):
+            print(f"Transcript already exists: {txt_file}")
+        else:
+            print("Downloading audio...")
+            subprocess.run(["yt-dlp", "-x", "--audio-format", "mp3", "--ffmpeg-location", "/opt/homebrew/bin", "-o", mp3_file, url], check=True) # Download audio as mp3 using yt-dlp
 
-    # Transcribe using Whisper
-    print("🎙️ Transcribing with Whisper...")
-    subprocess.run(["whisper", audio_file, "--model", "small", "--output_format", "txt"], check=True)
+            print("Transcribing with Whisper...")
+            subprocess.run(["whisper", mp3_file, "--model", "small", "--output_format", "txt"], check=True) # Transcribe audio using Whisper
 
-    # Save transcript
-    whisper_output_file = audio_file.replace(".mp3", ".txt")
-    with open(whisper_output_file, "r") as f:
-        transcript_text = f.read()
+            whisper_txt = mp3_file.replace(".mp3", ".txt")
+            os.rename(whisper_txt, txt_file) # Rename output 
+            print(f"Transcript saved to: {txt_file}")
 
-    with open(transcript_file, "w") as f:
-        f.write(transcript_text)
+        # Load the transcript text
+        with open(txt_file, "r") as f:
+            transcript = f.read()
 
-    print(f"✅ Transcript saved as: {transcript_file}")
+        # Create structured LangChain Document chunks
+        citation = generate_youtube_citation(video_title, url)
+        chunks = text_splitter.create_documents([transcript])
+        for chunk in chunks:
+            chunk.page_content = f"=== Start of Video: {video_title} ===\n{chunk.page_content.strip()}\n=== End of Video: {citation} ==="
+            chunk.metadata = {
+                "source_title": video_title,
+                "citation": citation,
+                "source_type": "youtube"
+            }
+            video_chunks.append(chunk)
 
-print("\n🎉 All videos processed! Transcripts are now in 'pdf_folder'.")
+    return video_chunks
 
-# ---- 2. Load Multiple PDFs & Process Them ----
-pdf_folder = os.getenv("PDF_FOLDER", "ai_rag/pdf_folder")
-pdf_paths = [os.path.join(pdf_folder, file) for file in os.listdir(pdf_folder) if file.endswith('.pdf')]
 
-all_pages = []
+# ---- 3. PDF DOCUMENT HANDLING ----
+# Folder where PDFs are stored
+pdf_folder = os.getenv("PDF_FOLDER", r"/pdf_folder_path") # Change this to the path of the PDF folder
+pdf_paths = [os.path.join(pdf_folder, file) for file in os.listdir(pdf_folder) if file.endswith(".pdf")]
+
+# Text splitter for both PDFs and transcripts
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=1000,
+    chunk_overlap=100,
+    separators=["\n\n", "\n", ".", "!", "?", ",", " ", ""]
+)
+enhanced_chunks = []
+
+# Extract title and citation from PDF path
+def extract_title_from_path(pdf_path):
+    return os.path.splitext(os.path.basename(pdf_path))[0].replace("_", " ")
+
+def generate_simple_citation(title):
+    return f"{title}. (n.d.). Retrieved from course materials."
+
+# Load & process PDFs
 for pdf_path in pdf_paths:
     loader = PyPDFLoader(pdf_path)
-    all_pages.extend(loader.load_and_split())  # Append pages to one list
+    pages = loader.load_and_split()
+    title = extract_title_from_path(pdf_path)
+    citation = generate_simple_citation(title)
+    split_chunks = text_splitter.split_documents(pages)
 
-# 3. Load transcripts
-transcript_paths = [os.path.join(pdf_folder, file) for file in os.listdir(pdf_folder) if file.endswith('.txt')]
+    for chunk in split_chunks:
+        content = f"=== Start of Article: {title} ===\n{chunk.page_content.strip()}\n=== End of Article: {citation} ==="
+        enhanced_chunks.append(Document(
+            page_content=content,
+            metadata={
+                "source_title": title,
+                "citation": citation,
+                "source_type": "pdf"
+            }
+        ))
 
-for transcript_path in transcript_paths:
-    with open(transcript_path, "r") as f:
-        transcript_text = f.read()
-    doc = Document(page_content=transcript_text, metadata={"source": transcript_path, "type": "YouTube Transcript"})
-    all_pages.append(doc)
+# Combine all sources
+video_chunks = process_youtube_videos(youtube_urls, pdf_folder) if youtube_urls else []
+all_chunks = enhanced_chunks + video_chunks
 
-print(f"Loaded {len(pdf_paths)} PDFs and {len(transcript_paths)} transcripts.")
 
-# ---- 3. Create a Vector Store for Document Retrieval ----
-store = DocArrayInMemorySearch.from_documents(all_pages, embedding=embeddings)
-retriever = store.as_retriever(search_kwargs={"k": 3})  # Retrieve top 3 relevant chunks
+# ---- 4. VECTORSTORE HANDLING ----
+# Group chunks by their source title
+chunks_by_title = defaultdict(list)
+for doc in all_chunks:
+    title = doc.metadata.get("source_title", "Unknown Title").lower()
+    chunks_by_title[title].append(doc)
 
-# ---- 4. Get Student's Information ----
-# --- Define Prompts ---
+# Create per-title retrievers
+retrievers_by_title = {
+    title: DocArrayInMemorySearch.from_documents(docs, embedding=embeddings).as_retriever(search_kwargs={"k": 10})
+    for title, docs in chunks_by_title.items()
+}
+
+# Create global retriever
+global_retriever = DocArrayInMemorySearch.from_documents(all_chunks, embedding=embeddings).as_retriever(search_kwargs={"k": 10})
+
+# For fuzzy matching titles
+known_titles = list(set(doc.metadata["source_title"] for doc in all_chunks))
+
+
+# ---- 5. STUDENT INFORMATION EXTRACTION ----
+# Prompts to extract name, course, and level
 name_prompt = PromptTemplate.from_template(
     "Extract the first name from this text: {text}. Only return the name, nothing else."
 )
@@ -107,12 +160,12 @@ level_prompt = PromptTemplate.from_template(
     "Only return one of these three words, nothing else."
 )
 
-# --- Create Processing Chains ---
+# Prompt chains
 extract_name_chain = name_prompt | llm | StrOutputParser()
 extract_course_chain = course_prompt | llm | StrOutputParser()
 extract_level_chain = level_prompt | llm | StrOutputParser()
 
-# --- Define Functions ---
+# Helper functions
 def get_student_name(user_input):
     return extract_name_chain.invoke({"text": user_input}).strip()
 
@@ -122,7 +175,7 @@ def get_course_name(user_input):
 def get_familiarity_level(user_input):
     return extract_level_chain.invoke({"text": user_input}).strip()
 
-# --- User Input & AI Extraction ---
+# Capture student info
 user_response = input("Hello, How can I call you? ")
 student_name = get_student_name(user_response)
 
@@ -134,8 +187,9 @@ familiarity = get_familiarity_level(level_input)
 
 print(f"Great! I will be your tutor for {course_name} at the {familiarity} level. Let's begin!\n")
 
-# ---- 5. Define Prompt Templates ----
-# Template for standalone question generation
+
+# ---- 6. AI TUTOR PROMPT SETUP ----
+# Template for standalone question rephrasing
 standalone_question_template = """
 Given the following conversation history and a follow-up question, rephrase the follow-up question to be a standalone question.
 
@@ -147,41 +201,32 @@ Follow-up Question:
 
 Standalone Question:
 """
-
 standalone_question_prompt = PromptTemplate.from_template(standalone_question_template)
 
-# Template for the AI tutor's response
+# Main tutor response prompt template
 tutor_response_template = """
 ### AI Role
-You are an autonomous AI educator specializing in the course: {course_name}, capable of independently guiding students through structured lessons, answering questions, and dynamically adapting to their learning needs without requiring constant human intervention.
-Use the uploaded course materials to provide these structured lessons along with real-world examples. If no materials are available, inform the user and provide general guidance while ensuring responses remain aligned with educational frameworks. If a user asks something outside the course scope, politely guide them back to relevant topics. 
+“Hey there! You’re an expert tutor for {student_name}, especially for the course: {course_name}. Every response must mention {student_name} and refer to them throughout the explanation.You explain things in a clear, friendly way and love using real-world examples. Keep things conversational and approachable!
+Your goal is to guide students through structured lessons, answer their questions, and adapt to their learning needs—just like a great teacher would. If course materials are available, use them to provide solid explanations with practical examples. 
+If a student asks something outside the course, gently steer them back on track while keeping the conversation positive and engaging. Let’s make learning an enjoyable experience!”
 
 ### Conversational Continuity & Memory
-Treat the entire interaction with the student as a continuous conversation. Keep track of the key points and questions raised during the session, and use them to inform future responses. This will help maintain coherence and ensure responses are relevant to the student's ongoing learning process. Adapt your explanations and teaching style based on the flow of the conversation and the student's evolving needs. Ensure that each response builds upon previous exchanges to keep the conversation dynamic and engaging.
+Treat the interaction as a continuous conversation, building on prior exchanges. Rephrase follow-up questions as standalone inquiries when needed for clarity.
 
 ### Effective AI Tutoring Approach
 You are designed to reflect the qualities of an effective educator:
 Begin by assessing the student's background knowledge based on {familiarity} and tailor your responses accordingly.
 Provide accurate, expert-level knowledge while aligning with curriculum standards. Adapt teaching strategies using real-world applications and diverse instructional methods. 
 
-Structure your responses based on the complexity and intent of the user’s input:
-For short questions, provide brief, bullet-pointed answers.
-For explanatory questions, provide well-structured, in-depth insights.
-For complex or multi-part questions (e.g., a given code and error), provide detailed, sectioned explanations.
-For unclear or highly technical questions, simplify the concepts and provide relatable examples.
+Structure responses based on the question’s complexity:
+	•	For explanations, provide clear, in-depth insights.
+	•	For processes, offer step-by-step guidance.
+	•	For comparisons, highlight key differences and similarities.
+Integrate real-world applications relevant to political sentiment analysis and discuss challenges (e.g., bias, misinformation, ethics). Encourage active learning in every possible context, even when answering process-oriented questions.
+After explaining a technical concept or step, ask students to consider how they might apply it to a real-world scenario or what potential challenges they might encounter.
 
 ### Response Formatting
-Adapt your response format based on the question and content:
-Always include:
-Contextual introduction  - start with a brief introduction about the topic at hand 
-Concept explanation - provide structured answers using analogies and examples as needed.
-Engagement - end with a relevant catchy question encouraging active learning.
-
-When explaining processes or instructions:
-Provide clear, step-by-step guidance
-When comparing concepts:
-Use structured comparisons (e.g., lists, tables, or prose explanations highlighting key differences and similarities)
-
+Start with a friendly greeting and maintain a conversational tone throughout the response. Address the student with their name: {student_name} whenever possible.
 ### Linguistics and Formatting Guidelines
 Avoid using explicit speech references, such as "point number one" or "firstly," to ensure the response is visually functional and does not require verbalization when converted to speech.
 
@@ -189,16 +234,16 @@ Avoid using explicit speech references, such as "point number one" or "firstly,"
 Encourage active learning by ending explanations with relevant, thought-provoking questions when appropriate. For example: ‘How do you think this concept applies to [real-world example]?’ Exceptions: If the user asks for a simple definition, quick fact, or straightforward procedural step, do not include a follow-up question unless clarification is likely needed.
 
 ### Personalized Feedback
-When applicable use {student_name} to personalize responses.
+Use {student_name} to personalize responses.
 Offer tailored suggestions that acknowledge progress and guide further learning. For example:
 "Great job applying this concept! To further develop your understanding, consider exploring [related topics]."
 “Your analysis is excellent! If you'd like a different perspective, try explaining this concept using an analogy or real-world example — can make complex ideas more relatable.”
 
 ### Referencing
-- Strictly rely on the given course materials (no assumptions, no outside knowledge).
-- Clearly reference the arguments made by different authors when applicable.
-- Use APA 7 citation style for direct quotations and paraphrased ideas by including author(s) last name, year of publication, and page number (if applicable) - e.g., (Smith, 2022, p. 45).
-- If multiple authors discuss a similar topic, compare and contrast their perspectives.
+•⁠  ⁠Strictly rely on the given course materials (no assumptions, no outside knowledge).
+•⁠  ⁠Clearly reference the arguments made by different authors when applicable.
+•⁠  ⁠Use APA 7 citation style for direct quotations and paraphrased ideas by including author(s) last name, year of publication, and page number (if applicable) - e.g., (Smith, 2022, p. 45).
+•⁠  ⁠If multiple authors discuss a similar topic, compare and contrast their perspectives.
 
 Use the provided context and conversation history to answer the student's question.
 
@@ -213,27 +258,42 @@ Student's Question:
 
 AI Tutor's Response:
 """
-
 tutor_response_prompt = PromptTemplate.from_template(tutor_response_template)
 
-# ---- 6. Function to Format Retrieved Docs ----
+# ---- 6. UTILITY FUNCTIONS ----
+# Format retrieved documents for display
 def format_docs(docs):
-    return "\n\n".join([f"Document Excerpt:\n{doc.page_content.strip()}" for doc in docs])
+    formatted = []
+    for doc in docs:
+        title = doc.metadata.get("source_title", "Unknown Title")
+        citation = doc.metadata.get("citation", "No citation available")
+        excerpt = doc.page_content.strip()
+        formatted.append(f"Title: {title}\n{excerpt}\n(Source: {citation})")
+    return "\n\n".join(formatted)
 
-# ---- 7. Initialize Chat History ----
-chat_history = []
-
-# ---- 8. Function to Generate Standalone Question ----
+# Generate a standalone question based on the chat history
 def generate_standalone_question(question, chat_history):
     # Format the chat history
     formatted_history = "\n".join([f"Student: {msg['content']}" if msg['role'] == 'user' else f"AI Tutor: {msg['content']}" for msg in chat_history])
     # Create the prompt
     prompt = standalone_question_prompt.format(chat_history=formatted_history, question=question)
     # Generate the standalone question
-    response = llm(prompt)
+    response = llm.invoke(prompt)
     return response.strip()
+    
+# Extract the title of a document from a question
+def extract_title_from_question(question, known_titles):
+    matches = get_close_matches(question.lower(), [t.lower() for t in known_titles], n=1, cutoff=0.6)
+    if matches:
+        for title in known_titles:
+            if title.lower() == matches[0]:
+                return title
+    return None
 
-# ---- 9. Interactive Q&A Loop ----
+
+# ---- 7. INTERACTIVE Q&A LOOP ----
+chat_history = []
+
 while True:
     user_input = input("Ask your AI tutor a question (or type 'exit' to quit): ")
     
@@ -241,14 +301,23 @@ while True:
         print("Goodbye! 👋")
         break
 
-    # Start timing
-    start_time = time.time()
+    # Start timing - for performance monitoring
+    #start_time = time.time()
 
     # Generate a standalone question based on the chat history
     standalone_question = generate_standalone_question(user_input, chat_history)
     
     # Retrieve context documents
-    retrieved_docs = retriever.get_relevant_documents(standalone_question)
+    # Check if question refers to a specific article
+    mentioned_title = extract_title_from_question(standalone_question, known_titles)
+
+    if mentioned_title and mentioned_title in retrievers_by_title:
+        retriever = retrievers_by_title[mentioned_title]
+    else:
+        retriever = global_retriever
+
+    retrieved_docs = retriever.invoke(standalone_question)
+    
     context = format_docs(retrieved_docs)
 
     # Format the chat history for the tutor's response
@@ -278,7 +347,8 @@ while True:
     chat_history.append({"role": "user", "content": user_input})
     chat_history.append({"role": "assistant", "content": full_response})
 
-    # Calculate and display elapsed time
-    elapsed_time = time.time() - start_time
-    print(f"\n\n(Response generated in {elapsed_time:.2f} seconds)")
+    # Calculate and display elapsed time - for performance monitoring
+    #elapsed_time = time.time() - start_time
+    #print(f"\n\n(Response generated in {elapsed_time:.2f} seconds)")
+    
     print("\n" + "-" * 60)  # Divider for readability
