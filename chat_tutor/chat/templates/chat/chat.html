@@ -1,0 +1,211 @@
+<!-- chat_tutor/chat/templates/chat/chat.html -->
+{% extends 'chat/base.html' %}
+{% block title %}Chat Tutor{% endblock %}
+{% block extra_css %}
+    <style>
+    /* Simple styling for the chat area */
+    #chat-box {
+        height: 400px;
+        overflow-y: scroll;
+        border: 1px solid #ddd;
+        padding: 15px;
+    }
+    .message {
+        margin-bottom: 10px;
+    }
+    .message.user {
+        text-align: right;
+    }
+    .message.ai {
+        text-align: left;
+    }
+    .conversation-item {
+        position: relative;
+    }
+    .delete-btn {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: red;
+    }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="row">
+        <!-- Sidebar: Conversation History -->
+        <div class="col-md-3">
+            <h4>Conversations</h4>
+            <a href="{% url 'new_conversation' %}"
+               class="btn btn-sm btn-success mb-2">New Conversation</a>
+            <ul class="list-group">
+                {% for conv in all_conversations %}
+                    <li class="list-group-item conversation-item {% if conv.id == active_conversation.id %}active{% endif %}">
+                        <a href="{% url 'switch_conversation' conv.id %}"
+                           style="color: inherit;
+                                  text-decoration: none">
+                            Conversation {{ conv.id }}
+                            <br>
+                            <small>{{ conv.started_at|date:"Y-m-d H:i" }}</small>
+                        </a>
+                        <a href="{% url 'delete_conversation' conv.id %}"
+                           class="delete-btn"
+                           onclick="return confirm('Delete this conversation?');">&times;</a>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item">No conversations available.</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <!-- Main Chat Area -->
+        <div class="col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Chat Tutor Interface</h1>
+                <div>
+                    <!-- File Manager Button -->
+                    <button type="button"
+                            class="btn btn-warning mr-2"
+                            data-toggle="modal"
+                            data-target="#fileManagerModal">File Manager</button>
+                    <!-- Disclaimer Button -->
+                    <button type="button"
+                            class="btn btn-info"
+                            data-toggle="modal"
+                            data-target="#disclaimerModal">Disclaimer</button>
+                </div>
+            </div>
+            <!-- Chat Area -->
+            <div id="chat-box" class="mb-3">
+                {% for msg in messages %}
+                    <div class="message {{ msg.sender }}">
+                        <strong>{{ msg.sender|capfirst }}:</strong> {{ msg.content|linebreaks }}
+                    </div>
+                {% endfor %}
+            </div>
+            <!-- Chat Input -->
+            <form id="chat-form"
+                  class="form-inline"
+                  action="{% url 'send_message' %}"
+                  method="post">
+                {% csrf_token %}
+                <input type="text"
+                       name="message"
+                       id="user-input"
+                       class="form-control flex-grow-1 mr-2"
+                       placeholder="Type your message...">
+                <button type="submit" class="btn btn-primary mr-2">Send</button>
+                <button type="button" id="tts-btn" class="btn btn-secondary">Switch to TTS Mode</button>
+            </form>
+            <!-- Disclaimer Modal -->
+            <div class="modal fade"
+                 id="disclaimerModal"
+                 tabindex="-1"
+                 aria-labelledby="disclaimerModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="disclaimerModalLabel">Disclaimer</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            {% if disclaimer %}
+                                {{ disclaimer }}
+                            {% else %}
+                                No disclaimer provided.
+                            {% endif %}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- File Manager Modal -->
+            <div class="modal fade"
+                 id="fileManagerModal"
+                 tabindex="-1"
+                 role="dialog"
+                 aria-labelledby="fileManagerModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog modal-lg" role="document">
+                    <!-- modal-lg for a larger window -->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="fileManagerModalLabel">File Manager</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Embedded iframe loads the file manager view -->
+                            <iframe src="{% url 'file_manager' %}"
+                                    frameborder="0"
+                                    style="width: 100%;
+                                           height: 400px"></iframe>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block extra_js %}
+    <script>
+    document.getElementById('chat-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const input = document.getElementById('user-input');
+        const message = input.value.trim();
+        if (message === '') return;
+
+        // Build form data
+        let formData = new FormData();
+        formData.append('message', message);
+
+        // Get CSRF token (assumes you have {% csrf_token %} in your form)
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        fetch("{% url 'send_message' %}", {
+            method: "POST",
+            body: formData,
+            headers: {
+                "X-CSRFToken": csrftoken,
+                "X-Requested-With": "XMLHttpRequest"
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error(data.error);
+                return;
+            }
+            // Append the user's message
+            const chatBox = document.getElementById('chat-box');
+            let userDiv = document.createElement('div');
+            userDiv.className = 'message user';
+            userDiv.innerHTML = '<strong>User:</strong> ' + data.user_message.content;
+            chatBox.appendChild(userDiv);
+            // Append the AI's message
+            let aiDiv = document.createElement('div');
+            aiDiv.className = 'message ai';
+            aiDiv.innerHTML = '<strong>AI:</strong> ' + data.ai_message.content;
+            chatBox.appendChild(aiDiv);
+
+            // Clear input and scroll to bottom
+            input.value = '';
+            chatBox.scrollTop = chatBox.scrollHeight;
+        })
+        .catch(error => console.error('Error:', error));
+    });
+
+    // Dummy TTS button action remains the same
+    document.getElementById('tts-btn').addEventListener('click', function() {
+        alert('TTS mode toggled (dummy action).');
+    });
+    </script>
+{% endblock %}

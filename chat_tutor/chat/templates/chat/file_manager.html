@@ -1,0 +1,91 @@
+<!-- chat_tutor/chat/templates/chat/file_manager.html -->
+{% extends 'chat/base.html' %}
+{% block title %}File Manager{% endblock %}
+{% block content %}
+    <h1 class="mb-4">Manage Files & YouTube Links</h1>
+    <div class="row">
+        <!-- Left Column: Files -->
+        <div class="col-md-6">
+            <!-- Upload Files Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2 class="h5 mb-0">Upload Files</h2>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="file">Choose a file to upload</label>
+                            <input type="file" name="file" id="file" class="form-control-file">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                    </form>
+                </div>
+            </div>
+            <!-- Uploaded Files Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="h5 mb-0">Uploaded Files</h3>
+                </div>
+                <div class="card-body">
+                    {% if uploaded_files %}
+                        <ul class="list-group">
+                            {% for file in uploaded_files %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ file }}
+                                    <a href="{% url 'delete_file' file %}" class="btn btn-danger btn-sm">Delete</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="mb-0">No files uploaded yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <!-- Right Column: YouTube Links -->
+        <div class="col-md-6">
+            <!-- Add YouTube Links Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2 class="h5 mb-0">Add YouTube Links</h2>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="youtube_link">Paste a YouTube URL</label>
+                            <input type="text"
+                                   name="youtube_link"
+                                   id="youtube_link"
+                                   class="form-control"
+                                   placeholder="https://www.youtube.com/watch?v=...">
+                        </div>
+                        <button type="submit" class="btn btn-success">Add Link</button>
+                    </form>
+                </div>
+            </div>
+            <!-- Saved YouTube Links Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="h5 mb-0">Saved YouTube Links</h3>
+                </div>
+                <div class="card-body">
+                    {% if youtube_links %}
+                        <ul class="list-group">
+                            {% for link in youtube_links %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <a href="{{ link }}" target="_blank">{{ link }}</a>
+                                    <a href="{% url 'delete_link' forloop.counter0 %}"
+                                       class="btn btn-danger btn-sm">Delete</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="mb-0">No YouTube links saved yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,154 @@
+<!-- chat_tutor/chat/templates/chat/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>
+            {% block title %}My Site{% endblock %}
+        </title>
+        <!-- Bootstrap CSS (light version) -->
+        <link rel="stylesheet"
+              href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+        <!-- Define CSS Variables for Light & Dark Mode -->
+        <style>
+    /* Light mode defaults (applied to :root) */
+    :root {
+      --background-color: #ffffff;
+      --text-color: #000000;
+      --card-bg-color: #ffffff;
+      --card-text-color: #000000;
+      --border-color: #dddddd;
+
+      /* Button overrides (light mode) - optional */
+      --btn-bg-color: #007bff;
+      --btn-text-color: #ffffff;
+    }
+
+    /* Dark mode overrides */
+    .dark-mode {
+      --background-color: #121212;
+      --text-color: #e0e0e0;
+      --card-bg-color: #1e1e1e;
+      --card-text-color: #e0e0e0;
+      --border-color: #333333;
+
+      /* Button overrides (dark mode) - optional */
+      --btn-bg-color: #444444;
+      --btn-text-color: #ffffff;
+    }
+
+    /* Apply variables to body & common elements */
+    body {
+      background-color: var(--background-color);
+      color: var(--text-color);
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .card, .modal-content {
+      background-color: var(--card-bg-color);
+      color: var(--card-text-color);
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    /* Chat box or any custom container */
+    #chat-box {
+      background-color: var(--card-bg-color);
+      color: var(--card-text-color);
+      border: 1px solid var(--border-color);
+    }
+
+    /* Messages inside the chat box */
+    .message {
+      margin-bottom: 10px;
+      color: var(--card-text-color);
+    }
+    .message.user { text-align: right; }
+    .message.ai { text-align: left; }
+
+    /* Inputs, textareas, etc. */
+    .form-control, .form-control-file {
+      background-color: var(--background-color);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      transition: background-color 0.3s, color 0.3s;
+    }
+    ::placeholder {
+      color: #aaa; /* So placeholder text is visible in dark mode */
+    }
+
+    .form-control:focus {
+        background-color: var(--background-color) !important;
+        color: var(--text-color) !important;
+        border-color: var(--border-color) !important;
+        box-shadow: 0 0 0 0.2rem rgba(224, 224, 224, 0.25) !important;
+      }      
+
+    /* List groups (e.g. for file links, YouTube links) */
+    .list-group-item {
+      background-color: var(--card-bg-color);
+      color: var(--card-text-color);
+      border-color: var(--border-color);
+    }
+
+    /* Simple override for default .btn classes 
+       so they aren't too bright in dark mode (optional) */
+    .btn {
+      transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+    }
+    .dark-mode .btn-primary {
+      background-color: var(--btn-bg-color);
+      border-color: var(--btn-bg-color);
+      color: var(--btn-text-color);
+    }
+    .dark-mode .btn-warning {
+      background-color: #666; 
+      border-color: #666;
+      color: #fff;
+    }
+    .dark-mode .btn-info {
+      background-color: #555;
+      border-color: #555;
+      color: #fff;
+    }
+        </style>
+        {% block extra_css %}{% endblock %}
+    </head>
+    <body>
+        <div class="container my-4">
+            <!-- Dark Mode Toggle Button -->
+            <div class="d-flex justify-content-end mb-3">
+                <button id="darkModeToggle" class="btn btn-outline-secondary btn-sm">Toggle Dark Mode</button>
+            </div>
+            {% block content %}{% endblock %}
+        </div>
+        <!-- jQuery, Popper.js, and Bootstrap JS -->
+        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+        <!-- Dark Mode Toggling Script -->
+        <script>
+    // On page load, check localStorage to see if dark mode is enabled
+    (function() {
+      const body = document.body;
+      const darkModeSetting = localStorage.getItem('darkMode');
+      if (darkModeSetting === 'enabled') {
+        body.classList.add('dark-mode');
+      }
+    })();
+
+    // Add event listener to the toggle button
+    document.getElementById('darkModeToggle').addEventListener('click', function() {
+      const body = document.body;
+      body.classList.toggle('dark-mode');
+
+      // Save preference to localStorage
+      if (body.classList.contains('dark-mode')) {
+        localStorage.setItem('darkMode', 'enabled');
+      } else {
+        localStorage.setItem('darkMode', 'disabled');
+      }
+    });
+        </script>
+        {% block extra_js %}{% endblock %}
+    </body>
+</html>

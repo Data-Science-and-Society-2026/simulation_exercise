@@ -1,0 +1,19 @@
+{% extends 'chat/base.html' %}
+{% block title %}Conversation {{ conversation.id }}{% endblock %}
+{% block content %}
+    <h1>Conversation {{ conversation.id }}</h1>
+    <p>Started at: {{ conversation.started_at }}</p>
+    <div class="mb-3">
+        <a href="{% url 'export_conversation' conversation.id %}"
+           class="btn btn-success">Export Conversation</a>
+        <a href="{% url 'conversation_history' %}" class="btn btn-secondary">Back to History</a>
+    </div>
+    <div id="conversation-box" class="mb-3">
+        {% for msg in messages %}
+            <div class="message {{ msg.sender }}">
+                <strong>{{ msg.sender|capfirst }}:</strong>
+                <span class="message-content">{{ msg.content|linebreaks }}</span>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
