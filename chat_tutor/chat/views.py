@@ -41,15 +41,43 @@ def chat_view(request):
         'disclaimer': disclaimer_text,
     })
 
+# Add these imports at the top of your file
+import sys
+from pathlib import Path
+
+from langchain.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+
+# Add the parent directory to sys.path
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
+
+# Import components from your ai_rag package
+from ai_rag.model import get_model
+from ai_rag.utils import format_docs
+from ai_rag.vector_storage import VectorStorage
+
+
 def send_message(request):
     if request.method == "POST":
         message_text = request.POST.get("message")
         if message_text:
             conv = get_object_or_404(Conversation, id=request.session.get('conversation_id'))
+            
             # Save user's message
             user_message = Message.objects.create(conversation=conv, sender="user", content=message_text)
-            # Create a dummy AI response
-            ai_message = Message.objects.create(conversation=conv, sender="ai", content="This is a dummy response.")
+            
+            # Get conversation history
+            messages = conv.messages.all().order_by('timestamp')
+            chat_history = "\n".join([
+                f"{'Student' if msg.sender == 'user' else 'AI Tutor'}: {msg.content}" 
+                for msg in messages
+            ])
+            
+            # Generate AI response using the existing ai_rag modules
+            ai_response = generate_ai_response(message_text, chat_history)
+            
+            # Save AI response
+            ai_message = Message.objects.create(conversation=conv, sender="ai", content=ai_response)
             
             return JsonResponse({
                 'user_message': {
@@ -62,6 +90,97 @@ def send_message(request):
                 }
             })
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+def generate_ai_response(question, chat_history):
+    """Generate an AI response using RAG with the given question and chat history."""
+    try:
+        # Initialize the AI model using your existing module
+        model = get_model("mistral")
+        
+        # Get PDF files from media folder
+        files_folder = os.path.join(settings.MEDIA_ROOT, 'files')
+        pdf_paths = [
+            os.path.join(files_folder, file) 
+            for file in os.listdir(files_folder) 
+            if file.endswith('.pdf')
+        ]
+        
+        # Load PDFs if we have any
+        if pdf_paths:
+            from langchain.document_loaders import PyPDFLoader
+            all_pages = []
+            for pdf_path in pdf_paths:
+                loader = PyPDFLoader(pdf_path)
+                all_pages.extend(loader.load_and_split())
+            
+            # Create vector store with the documents
+            vector_storage = VectorStorage(all_pages, model.embeddings)
+            
+            # Retrieve relevant documents
+            retrieved_docs = vector_storage.retriever.get_relevant_documents(question)
+            context = format_docs(retrieved_docs)
+        else:
+            context = "No course materials available."
+        
+        # Using the standalone question template logic from ai_rag
+        standalone_question_template = """
+        Given the following conversation history and a follow-up question, rephrase the follow-up question to be a standalone question.
+        
+        Conversation History:
+        {chat_history}
+        
+        Follow-up Question:
+        {question}
+        
+        Standalone Question:
+        """
+        
+        standalone_question_prompt = PromptTemplate.from_template(standalone_question_template)
+        standalone_question = model.llm(standalone_question_prompt.format(
+            chat_history=chat_history,
+            question=question
+        ))
+        
+        # Using the tutor response template from ai_rag
+        tutor_response_template = """
+        ### AI Role
+        You are an autonomous AI educator capable of independently guiding students through structured lessons, answering questions, and dynamically adapting to their learning needs without requiring constant human intervention.
+        
+        ### Response Formatting
+        Adapt your response format based on the question and content:
+        Always include:
+        - Contextual introduction
+        - Concept explanation with examples
+        - End with a relevant engaging question
+        
+        Use the provided context and conversation history to answer the student's question.
+        
+        Course Materials Context:
+        {context}
+        
+        Conversation History:
+        {chat_history}
+        
+        Student's Question:
+        {question}
+        
+        AI Tutor's Response:
+        """
+        
+        tutor_response_prompt = PromptTemplate.from_template(tutor_response_template)
+        
+        # Prepare the final prompt
+        final_prompt = tutor_response_prompt.format(
+            context=context,
+            chat_history=chat_history,
+            question=standalone_question
+        )
+        
+        # Get response from the model
+        response = model.llm(final_prompt)
+        return response
+    except Exception as e:
+        return f"I apologize, but I encountered an error while processing your request: {str(e)}"
 
 def new_conversation(request):
     config = load_config()
