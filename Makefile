@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 UNAME_S := $(shell uname -s)
 
-.PHONY: setup system_deps
+.PHONY: setup system_deps server
 
 
 setup:
@@ -23,4 +23,7 @@ endif
 python_deps: 
 	@echo "Making Python Dependencies"
 	uv sync
+
+server:
+	cd chat_tutor && python3 manage.py runserver
 

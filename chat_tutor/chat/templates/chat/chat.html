@@ -3,7 +3,6 @@
 {% block title %}Chat Tutor{% endblock %}
 {% block extra_css %}
 <style>
-  /* CSS Custom Properties (Palette from previous example) */
   :root {
     --rosewater: #f2d5cf;
     --flamingo:  #eebebe;
@@ -31,106 +30,130 @@
     --base-dark:  #303446;
     --mantle:     #292c3c;
     --crust:      #232634;
-    /* Light mode overrides */
     --bg:         #f7f8fa;
     --text:       #333;
     --border:     #e0e0e0;
     --container-bg: #ffffff;
   }
+
   [data-theme="dark"] {
     --bg:         var(--base-dark);
     --text:       var(--text-light);
     --border:     var(--surface1);
     --container-bg: var(--surface0);
   }
+
   body {
-    background: var(--bg);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(to bottom right, var(--rosewater), var(--sky));
+    font-family: 'Roboto', Tahoma, Geneva, Verdana, sans-serif;
     color: var(--text);
     margin: 0;
     padding: 1rem;
+    line-height: 1.6;
   }
+
   .chat-layout {
     display: flex;
-    gap: 1rem;
+    gap: 1.5rem;
     max-width: 1200px;
     margin: 0 auto;
     height: calc(100vh - 2rem);
   }
+
   .conversation-panel {
     flex: 0 0 300px;
     background: var(--container-bg);
     border: 1px solid var(--border);
     border-radius: 16px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-    padding: 1rem;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    transition: all 0.3s ease;
   }
+
   .conversation-panel h4 {
     color: var(--text);
-    font-weight: 600;
-    margin-bottom: 1rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
     text-align: center;
   }
+
   .conversation-list {
     list-style: none;
     padding: 0;
     margin: 0;
   }
+
   .conversation-list li {
     background: var(--sky);
     border: 1px solid var(--border);
     border-radius: 50px;
-    padding: 0.5rem 1rem;
-    margin-bottom: 0.5rem;
-    transition: background 0.3s;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    transition: background 0.3s ease, transform 0.2s ease;
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
+
   .conversation-list li.active {
     background: var(--sapphire);
+    transform: scale(1.02);
   }
+
   .conversation-list li a {
     color: var(--text);
     text-decoration: none;
     flex-grow: 1;
   }
+
   .conversation-list li a:hover {
     text-decoration: underline;
+    color: var(--blue);
   }
+
   .conversation-list .delete-btn {
     color: var(--red);
     margin-left: 0.5rem;
-    text-decoration: none;
-    font-size: 1.25rem;
+    font-size: 1.5rem;
+    transition: color 0.3s ease;
   }
+
+  .conversation-list .delete-btn:hover {
+    color: var(--pink);
+  }
+
   .new-conv-btn {
     background: var(--peach);
     color: #fff;
     text-align: center;
-    padding: 0.5rem;
+    padding: 0.75rem;
     border-radius: 50px;
     border: none;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
     cursor: pointer;
-    transition: background 0.3s;
+    transition: background 0.3s, transform 0.2s ease;
   }
+
   .new-conv-btn:hover {
     background: var(--red);
+    transform: scale(1.05);
   }
+
   .chat-container {
     flex: 1;
     background: var(--container-bg);
     border: 1px solid var(--border);
     border-radius: 16px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
     padding: 2rem;
     display: flex;
     flex-direction: column;
+    transition: all 0.3s ease;
   }
+
   .chat-header {
     border-bottom: 1px solid var(--border);
     margin-bottom: 1rem;
@@ -139,108 +162,63 @@
     justify-content: space-between;
     align-items: center;
   }
+
   .chat-header h1 {
     font-size: 1.75rem;
-    font-weight: 600;
+    font-weight: 700;
     margin: 0;
     color: var(--text);
   }
+
   .header-buttons button {
     border-radius: 50px;
-    margin-left: 0.5rem;
-    padding: 0.5rem 1rem;
+    margin-left: 0.75rem;
+    padding: 0.75rem 1.25rem;
     border: none;
-    transition: background 0.3s;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s ease;
   }
+
+  .header-buttons button:hover {
+    transform: scale(1.05);
+  }
+
   .header-buttons .btn-warning {
     background: var(--peach);
     color: #fff;
   }
+
   .header-buttons .btn-warning:hover {
     background: var(--red);
   }
+
   .header-buttons .btn-info {
     background: var(--mauve);
     color: #fff;
   }
+
   .header-buttons .btn-info:hover {
     background: var(--pink);
   }
-  /* New Voice Chat button styling */
+
   .header-buttons .btn-voice {
     background: var(--lavender);
     color: #fff;
   }
+
   .header-buttons .btn-voice:hover {
     background: var(--pink);
   }
-  #chat-box {
-    flex: 1;
-    overflow-y: auto;
-    padding: 1rem;
-    background: var(--bg);
-    border-radius: 12px;
-    border: 1px solid var(--border);
-  }
-  .message {
-    margin-bottom: 1rem;
-    opacity: 0;
-    animation: fadeIn 0.3s forwards;
-  }
-  @keyframes fadeIn {
-    to { opacity: 1; }
-  }
-  .message.user {
-    text-align: right;
-  }
-  .message.ai {
-    text-align: left;
-  }
-  .message strong {
-    display: block;
-    font-size: 0.85rem;
-    color: var(--overlay0);
-  }
-  .chat-input {
-    margin-top: 1rem;
-    display: flex;
-    align-items: center;
-  }
-  .chat-input input {
-    border-radius: 50px;
-    padding: 0.75rem 1rem;
-    border: 1px solid var(--border);
-    width: 100%;
-    outline: none;
-    transition: border-color 0.3s;
-    background: var(--bg);
-    color: var(--text);
-  }
-  .chat-input input:focus {
-    border-color: var(--blue);
-  }
-  .chat-input button {
-    border-radius: 50px;
-    padding: 0.65rem 1.5rem;
-    margin-left: 0.75rem;
-    border: none;
-    cursor: pointer;
-    transition: background 0.3s;
-  }
-  .chat-input .btn-primary {
-    background: var(--teal);
+
+  .header-buttons .btn-issue {
+    background: var(--blue);
     color: #fff;
   }
-  .chat-input .btn-primary:hover {
-    background: var(--green);
+
+  .header-buttons .btn-issue:hover {
+    background: var(--sapphire);
   }
-  .chat-input .btn-secondary {
-    background: var(--overlay1);
-    color: #fff;
-  }
-  .chat-input .btn-secondary:hover {
-    background: var(--overlay0);
-  }
+
   .modal-content {
     border-radius: 16px;
     border: none;
@@ -248,11 +226,96 @@
     background: var(--container-bg);
     color: var(--text);
   }
+
   .modal-header, .modal-footer {
     border: none;
   }
+
+  #chat-box {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+    background: var(--bg);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    transition: all 0.3s ease;
+  }
+
+  .message {
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeIn 0.4s forwards;
+  }
+
+  @keyframes fadeIn {
+    to { opacity: 1; }
+  }
+
+  .message.user {
+    text-align: right;
+  }
+
+  .message.ai {
+    text-align: left;
+  }
+
+  .message strong {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--overlay0);
+  }
+  
+  .chat-input {
+    margin-top: 1.5rem;
+    display: flex;
+    align-items: center;
+  }
+
+  .chat-input input {
+    border-radius: 50px;
+    padding: 1rem 1.5rem;
+    border: 1px solid var(--border);
+    width: 100%;
+    outline: none;
+    background: var(--bg);
+    color: var(--text);
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+
+  .chat-input input:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 10px rgba(0, 122, 255, 0.2);
+  }
+
+  .chat-input button {
+    border-radius: 50px;
+    padding: 0.75rem 1.75rem;
+    margin-left: 1rem;
+    border: none;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s ease;
+  }
+
+  .chat-input .btn-primary {
+    background: var(--teal);
+    color: #fff;
+  }
+
+  .chat-input .btn-primary:hover {
+    background: var(--green);
+  }
+
+  .chat-input .btn-secondary {
+    background: var(--overlay1);
+    color: #fff;
+  }
+
+  .chat-input .btn-secondary:hover {
+    background: var(--overlay0);
+  }
 </style>
 {% endblock %}
+
 {% block content %}
 <div class="chat-layout">
   <!-- Conversation Panel -->
@@ -287,9 +350,12 @@
         <button type="button" class="btn btn-info" data-toggle="modal" data-target="#disclaimerModal">
           Disclaimer
         </button>
-        <!-- New Voice Chat Button (Toggle Recording) -->
         <button type="button" class="btn btn-voice" id="voice-chat-btn">
           Start Voice Chat
+        </button>
+        <!-- Report Issue Button -->
+        <button type="button" class="btn btn-issue" id="report-issue-btn">
+          Report Issue
         </button>
       </div>
     </div>
@@ -356,12 +422,12 @@
 {% endblock %}
 {% block extra_js %}
 <script>
-  // Variables for voice recording
+  // Voice below
   let mediaRecorder;
   let audioChunks = [];
   let isRecording = false;
 
-  // Function to create a "typing" indicator for the AI response
+  // simulate typing
   function showTypingIndicator() {
     const indicator = document.createElement('div');
     indicator.className = 'message ai';
@@ -369,8 +435,8 @@
     return indicator;
   }
 
-  // Function for a typewriter effect (gradual reveal of text)
-  function typeWriter(element, text, speed = 30) {
+  // Typing effect
+  function typeWriter(element, text, speed = 50) {
     let i = 0;
     element.innerHTML = "";
     function type() {
@@ -383,7 +449,7 @@
     type();
   }
 
-  // Standard chat form submission (text input)
+  // Standard Text Chat Submission
   let isSubmitting = false;
   document.addEventListener('DOMContentLoaded', function() {
     const chatForm = document.getElementById('chat-form');
@@ -458,15 +524,13 @@
       });
     });
 
-    // Voice Chat Button functionality using MediaRecorder
+    // Voice chat button
     const voiceBtn = document.getElementById('voice-chat-btn');
     voiceBtn.addEventListener('click', async function() {
       const btn = this;
       const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-      // If not recording, start recording
       if (!isRecording) {
-        // Request microphone access
         try {
           const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
           mediaRecorder = new MediaRecorder(stream);
@@ -477,12 +541,16 @@
             }
           });
           mediaRecorder.addEventListener("stop", () => {
-            // Create a blob from the recorded audio
+            // Create a Blob from recorded audio
             const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-            // Create form data with the audio file
             let formData = new FormData();
             formData.append('audio', audioBlob);
-            // Send the audio to the voice_chat endpoint
+
+            // Append a placeholder for the AI response
+            const aiPlaceholder = showTypingIndicator();
+            chatBox.appendChild(aiPlaceholder);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
             fetch("{% url 'voice_chat' %}", {
               method: "POST",
               body: formData,
@@ -505,21 +573,26 @@
               userDiv.className = 'message user';
               userDiv.innerHTML = '<strong>User (via voice):</strong> ' + data.recognized_text;
               chatBox.appendChild(userDiv);
-              // Append AI response with timing info
+              // Append AI response
               let aiDiv = document.createElement('div');
               aiDiv.className = 'message ai';
               aiDiv.innerHTML = '<strong>AI:</strong> ' + data.ai_text +
                 '<br><small>(Used ' + data.doc_count + ' PDFs, response in ' + data.query_time.toFixed(2) + 's)</small>';
               chatBox.appendChild(aiDiv);
               chatBox.scrollTop = chatBox.scrollHeight;
-              // Play the generated audio
+              // Create and play the generated audio
               let audio = new Audio(data.audio_url);
-              audio.play();
+              audio.load();
+              audio.play().then(() => {
+                console.log("Audio playback started.");
+              }).catch(err => {
+                console.error("Audio playback error:", err);
+              });
               btn.disabled = false;
               btn.textContent = "Start Voice Chat";
             })
             .catch(error => {
-              console.error("Error:", error);
+              console.error("Error during voice chat:", error);
               alert("Error during voice chat.");
               btn.disabled = false;
               btn.textContent = "Start Voice Chat";
@@ -533,11 +606,16 @@
           alert("Error accessing microphone.");
         }
       } else {
-        // If already recording, stop recording
         mediaRecorder.stop();
         isRecording = false;
         btn.textContent = "Start Voice Chat";
       }
+    });
+
+    // Issue button here
+    const reportIssueBtn = document.getElementById('report-issue-btn');
+    reportIssueBtn.addEventListener('click', function() {
+      window.location.href = "https://github.com/Data-Science-and-Society-2026/simulation_exercise/issues";
     });
   });
 </script>

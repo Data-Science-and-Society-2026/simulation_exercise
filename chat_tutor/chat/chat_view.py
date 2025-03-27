@@ -26,12 +26,10 @@ def load_config():
 
 
 def get_cached_model():
-    # MODEL_INSTANCE should already be loaded in the AppConfig's ready() method.
     return MODEL_INSTANCE
 
 
 def get_cached_vector_store():
-    # Similarly, return the precomputed vector store.
     return VECTOR_STORE
 
 
@@ -70,19 +68,15 @@ def send_message(request):
         if message_text:
             conv = get_object_or_404(Conversation, id=request.session.get("conversation_id"))
 
-            # Save user's message
             user_message = Message.objects.create(conversation=conv, sender="user", content=message_text)
 
-            # Get conversation history
             messages = conv.messages.all().order_by("timestamp")
             chat_history = "\n".join(
                 [f"{'Student' if msg.sender == 'user' else 'AI Tutor'}: {msg.content}" for msg in messages]
             )
 
-            # Generate AI response along with the document count
             ai_response, doc_count, query_time = generate_ai_response(message_text, chat_history, request)
 
-            # Save AI response
             ai_message = Message.objects.create(conversation=conv, sender="ai", content=ai_response)
 
             return JsonResponse(
@@ -115,9 +109,9 @@ def get_local_models():
 def generate_ai_response(question, chat_history, request):
     """Generate an AI response using precomputed resources and return the query time."""
     try:
-        model = get_cached_model()  # assuming you have a helper that returns the cached model
+        model = get_cached_model()
 
-        vector_store = get_cached_vector_store()  # similarly for vector store
+        vector_store = get_cached_vector_store()
         if vector_store:
             retrieved_docs = vector_store.retriever.get_relevant_documents(question)
             doc_count = len(retrieved_docs)
@@ -147,7 +141,7 @@ def generate_ai_response(question, chat_history, request):
             question=standalone_question,
         )
 
-        # Measure inference (query) time
+        # Measuring the inference time
         start_query = time.time()
         response = model.llm.invoke(final_prompt)
         query_time = time.time() - start_query
