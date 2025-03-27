@@ -1,0 +1,97 @@
+{% extends "chat/base.html" %}
+{% block title %}Select Model{% endblock %}
+{% block extra_css %}
+<style>
+  /* Use your pastel palette for a soft, modern look */
+  :root {
+    --rosewater: #f2d5cf;
+    --flamingo:  #eebebe;
+    --pink:       #f4b8e4;
+    --mauve:      #ca9ee6;
+    --red:        #e78284;
+    --maroon:     #ea999c;
+    --peach:      #ef9f76;
+    --yellow:     #e5c890;
+    --green:      #a6d189;
+    --teal:       #81c8be;
+    --sky:        #99d1db;
+    --sapphire:   #85c1dc;
+    --blue:       #8caaee;
+    --lavender:   #babbf1;
+    --text-light: #c6d0f5;
+    --subtext1:   #b5bfe2;
+    --subtext0:   #a5adce;
+    --overlay2:   #949cbb;
+    --overlay1:   #838ba7;
+    --overlay0:   #737994;
+    --surface2:   #626880;
+    --surface1:   #51576d;
+    --surface0:   #414559;
+    --base-dark:  #303446;
+    --mantle:     #292c3c;
+    --crust:      #232634;
+    --bg:         #f7f8fa;
+    --text:       #333;
+    --border:     #e0e0e0;
+    --container-bg: #ffffff;
+  }
+  [data-theme="dark"] {
+    --bg:         var(--base-dark);
+    --text:       var(--text-light);
+    --border:     var(--surface1);
+    --container-bg: var(--surface0);
+  }
+  .model-selection-container {
+    max-width: 500px;
+    margin: 3rem auto;
+    padding: 2rem;
+    background: var(--container-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+  }
+  .model-selection-container h2 {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: var(--text);
+  }
+  .form-control {
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+  }
+  .btn-custom {
+    background: var(--peach);
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    padding: 0.75rem 1.5rem;
+    margin-top: 1rem;
+    width: 100%;
+    transition: background 0.3s;
+  }
+  .btn-custom:hover {
+    background: var(--red);
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div class="model-selection-container">
+  <h2>Select a Model</h2>
+  {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+  {% endif %}
+  <form method="post" action="{% url 'model_selection' %}">
+    {% csrf_token %}
+    <div class="form-group">
+      <label for="modelSelect">Choose a model:</label>
+      <select id="modelSelect" name="model" class="form-control" required>
+        <option value="" disabled selected>Select a model</option>
+        {% for model in models %}
+          <option value="{{ model }}">{{ model }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn btn-custom">Select Model</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,121 @@
+Hello everyone, welcome to programming knowledge, so welcome to the new tutorial on NLTK.
+So let's get started with the tutorial.
+So basically what you need to do, you need to first import NLTK and this is the basic
+library you have to import.
+So now I'll give you a quick overview of like this is a text paragraph and this is a demo
+words.
+So first today we will start with stop words.
+Okay.
+So what you can do?
+NLTK.download stop words.
+So basically, this word download the package, you can refer to the previous tutorial how
+you can download this, and then you can do from NLTK.stop words, okay, from sorry, NLTK.corpus.
+This should be NLTK.corpus import, import, you need to import stop words, okay.
+Now what you need to do?
+You need to define stop words as a parameter stop underscore words is equal to stop words.
+And you need to define like we will be making this a set, okay, since like we will be making
+this as a set because there can be like I'll show you how stop words dot words, and you
+need to define the language English, okay, okay, and let's print this.
+First, I'll print the simple ones, the simple way print stop underscore words, okay, and
+I can move this to the like, we can have this here, yeah, no, it's perfectly fine.
+Now let's run the file python 2.py, and let's run this.
+And here you can see that the stop words are like imported from the library.
+And you might be seeing that there might be some words which are repeating themselves.
+Like, maybe they can be like, they might be a reason that some words are repeating themselves.
+So I just wanted to have this inside a set.
+So that was I was saying it earlier, but didn't want to confuse you.
+So now we can like put this in a set, and you can see like, we might have to do some
+size like yes, and this is how we can do it, okay.
+So I put this in a set, it would be easy for you to show you the difference later as well,
+okay.
+So yeah.
+So now what we can do, we need to tokenize this sentence, okay.
+So I showed in the previous tutorial how we can tokenize.
+So we need to like, we need to do one thing from NLTK.
+Let's let's do this from NLTK dot tokenize, import word underscore tokenizer, and another
+word is sent underscore tokenizer.
+So let's import this word underscore tokenize, and another is sent underscore tokenize, okay.
+Now what we can do, this is words is equal to word underscore tokenize this, and we are
+putting inside a text, and let's print the words, okay, okay, and we shall comment this
+out because this is a like, yeah, yeah, now let's run this, and you can see that we have
+already like welcome you to programming knowledge.
+So we have already tokenized our sentence, okay.
+So it looks good to go, okay.
+I can also comment this because this is not necessary needed, okay.
+And what I want to do, what I want to do, I want to create like this has some stop words
+and I'm going to remove those stop stop words.
+So what I can do now I can create a logic, okay, I can create a logic and remove the stop
+words from here, and use I will use very simple Python comprehension, okay, without stop
+underscore words is equal to an empty array for word in like I can give the give this
+as a tokenize underscore word for word in tokenize underscore words, okay.
+So this is the same as this, and I can also like, just a second, just okay, I'll press
+to control C, and yeah, that's good to go for word in tokenize underscore word, okay.
+If word, if word not in stop underscore words, then without stop words, okay.
+So I can also improve this to this.
+Like we do this as this is tokenize words without stop words.
+So I can do tokenize words without stop words dot append word, okay.
+So I hope this is fine.
+And then I can print, print tokenize words without stop words.
+I hope this is clear.
+First, I initialize an empty array for word in tokenize underscore word not stop words.
+This is very simple Python logic.
+I cannot make it clear clear, and I can do Python to dot py.
+So here you can see now I have like array, which is a tokenize words without stop words.
+So if you want to see the difference, if in case what you want to do see the difference.
+So what you can do, you know, this is a set, yeah, I made this to a set and this is a list.
+So what I can do, print set tokenize words minus set stop underscore words, okay.
+So that was a set already, but I just made it to like have a better readability, so readability.
+And now I will run this.
+So here you can see the difference is these words, okay.
+So, so here you can see, okay, like, okay, I, no, no, no, no, I made some, like, sorry,
+this is a wrong logic, sorry, I'll move this, I'll, I'll completely remove this.
+This is something wrong.
+I went wrong.
+Okay.
+Sorry.
+So what I do want to do, so I wanted to see the difference set, tokenize words without
+stop, stop words, and this should be subtracted with set tokenize with this, this is the tokenized
+words.
+Okay.
+So that was a, I went something wrong with that logic.
+Now we want to see that there are some words in tokenized words, which have been subtracted
+from tokenized words without stop words, okay.
+So this will show that which were the words and when I run this file, I'll make a clear
+statement.
+Now I'll run this file.
+So here you can see that basically these were the words which were removed as stop words,
+okay.
+So basically this was stop words, which were removed because these were the tokenized words
+and which is a set now.
+And from that set, we are moving those words, which are without stop words.
+So basically these words are going to be something which were extra in our tokenized words, okay.
+So like I also now print tokenized words.
+This will make you clear.
+And I also print a tokenized words without stop words, stop words.
+Now I'll run this.
+So now here you can see that with is a word, with is a word, okay, which exists here.
+Like I'm also highlighting with is a word which exists here in the tokenized words,
+but it doesn't exist in the tokenized words without stop words, because it was stop words,
+so it was removed.
+That's very clear.
+In the same way, these all words were also present, that is R was present, R is present
+here, but it is not present in this array.
+So I wanted to show you the difference, okay.
+So we can type this as words, stop words, which got removed, okay.
+The simple logic is like the stop words which you are to move are these words, okay, stop
+words which got removed at this, and so, and these are, and the other variables are like
+very defining these are tokenized words and these are tokenized words without stop words.
+So I can also run again, and this shall make you a real stop words, which were removed
+are this, the, here, to, with, on, and you are the words which got removed, okay.
+So these are the words which got removed.
+So this is how we deal with stop words, and in case you want to make very clear, you can
+type tokenized, tokenized words, okay, which included all, okay, which included, which
+included all the words, okay, which include all the words including stop words, okay.
+And if you want to make this very clear, now you can do this is without stop words, okay.
+So now what you can do, I can clear this and run this, and now I can see the stop words
+which got removed is this, the tokenized words which included all the words including
+stop words, these are the words, and this is without stop words, okay.
+So here you can see since this is without stop words, it has a shorter length in array.
+So thank you everyone, I'll catch you in the next tutorial, then we shall cover with
+limitization and stemming, and we shall also focus on sentiment analyzer.
+Thank you everyone.

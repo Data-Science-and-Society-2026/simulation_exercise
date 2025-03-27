@@ -9,13 +9,10 @@ class Conversation(models.Model):
 
 
 class Message(models.Model):
-    conversation = models.ForeignKey(
-        Conversation, related_name="messages", on_delete=models.CASCADE
-    )
+    conversation = models.ForeignKey(Conversation, related_name="messages", on_delete=models.CASCADE)
     sender = models.CharField(max_length=10)  # e.g., 'user' or 'ai'
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.sender}: {self.content[:30]}"
         return f"{self.sender}: {self.content[:30]}"

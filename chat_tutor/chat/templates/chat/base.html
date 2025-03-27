@@ -149,6 +149,90 @@
       }
     });
         </script>
-        {% block extra_js %}{% endblock %}
+        {% block extra_js %}
+        <script>
+          // Function to create a "typing" indicator
+          function showTypingIndicator() {
+            const indicator = document.createElement('div');
+            indicator.className = 'message ai';
+            indicator.innerHTML = '<strong>AI:</strong> <span class="typing">AI is typing<span class="dots">...</span></span>';
+            return indicator;
+          }
+
+          // Function for typewriter effect (if desired)
+          function typeWriter(element, text, speed = 30) {
+            let i = 0;
+            element.innerHTML = "";
+            function type() {
+              if (i < text.length) {
+                element.innerHTML += text.charAt(i);
+                i++;
+                setTimeout(type, speed);
+              }
+            }
+            type();
+          }
+
+          document.getElementById('chat-form').addEventListener('submit', function(e) {
+              e.preventDefault();
+              
+              const input = document.getElementById('user-input');
+              const message = input.value.trim();
+              if (message === '') return;
+
+              const chatBox = document.getElementById('chat-box');
+
+              // Immediately append the user's message
+              let userDiv = document.createElement('div');
+              userDiv.className = 'message user';
+              userDiv.innerHTML = '<strong>User:</strong> ' + message;
+              chatBox.appendChild(userDiv);
+              
+              // Clear the input immediately
+              input.value = '';
+              
+              // Append a placeholder for the AI response
+              const aiPlaceholder = showTypingIndicator();
+              chatBox.appendChild(aiPlaceholder);
+              chatBox.scrollTop = chatBox.scrollHeight;
+
+              // Prepare form data and send AJAX request asynchronously
+              let formData = new FormData();
+              formData.append('message', message);
+              const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+              fetch("{% url 'send_message' %}", {
+                  method: "POST",
+                  body: formData,
+                  headers: {
+                      "X-CSRFToken": csrftoken,
+                      "X-Requested-With": "XMLHttpRequest"
+                  },
+              })
+              .then(response => response.json())
+              .then(data => {
+                  if (data.error) {
+                      console.error(data.error);
+                      aiPlaceholder.innerHTML = '<strong>AI:</strong> Sorry, an error occurred.';
+                      return;
+                  }
+                  // Replace placeholder with AI message using typewriter effect
+                  const aiTextContainer = document.createElement('span');
+                  aiPlaceholder.innerHTML = '<strong>AI:</strong> ';
+                  aiPlaceholder.appendChild(aiTextContainer);
+                  typeWriter(aiTextContainer, data.ai_message.content, 30);
+                  chatBox.scrollTop = chatBox.scrollHeight;
+              })
+              .catch(error => {
+                  console.error('Error:', error);
+                  aiPlaceholder.innerHTML = '<strong>AI:</strong> Sorry, an error occurred.';
+              });
+          });
+
+          document.getElementById('tts-btn').addEventListener('click', function() {
+              alert('TTS mode toggled (dummy action).');
+          });
+        </script>
+        {% endblock %}
     </body>
 </html>

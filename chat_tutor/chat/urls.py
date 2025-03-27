@@ -1,19 +1,22 @@
 # chat_tutor/chat/urls.py
 from django.urls import path
 
-from . import views
+
+from chat import chat_view, setup_view
 
 urlpatterns = [
-    path('', views.chat_view, name='chat'),
-    path('file-manager/', views.file_manager, name='file_manager'),
-    path('delete-file/<str:filename>/', views.delete_file, name='delete_file'),
-    path('delete-link/<int:link_index>/', views.delete_link, name='delete_link'),
-    path('conversations/', views.conversation_history, name='conversation_history'),
-    path('conversation/<int:conversation_id>/', views.conversation_detail, name='conversation_detail'),
-    path('conversation/<int:conversation_id>/export/', views.export_conversation, name='export_conversation'),
-    path('new_conversation/', views.new_conversation, name='new_conversation'),
-    path('send_message/', views.send_message, name='send_message'),
-    path('switch-conversation/<int:conversation_id>/', views.switch_conversation, name='switch_conversation'),
-    path('delete-conversation/<int:conversation_id>/', views.delete_conversation, name='delete_conversation'),
-
+    path("", chat_view.chat_view, name="chat"),
+    path("file-manager/", chat_view.file_manager, name="file_manager"),
+    path("delete-file/<str:filename>/", chat_view.delete_file, name="delete_file"),
+    path("delete-link/<int:link_index>/", chat_view.delete_link, name="delete_link"),
+    path("conversations/", chat_view.conversation_history, name="conversation_history"),
+    path("conversation/<int:conversation_id>/", chat_view.conversation_detail, name="conversation_detail"),
+    path("conversation/<int:conversation_id>/export/", chat_view.export_conversation, name="export_conversation"),
+    path("new_conversation/", chat_view.new_conversation, name="new_conversation"),
+    path("send_message/", chat_view.send_message, name="send_message"),
+    path("initial_setup/", setup_view.init_conversation, name="initial_setup"),
+    path("model_selection/", setup_view.model_selection, name="model_selection"),
+    path("switch-conversation/<int:conversation_id>/", chat_view.switch_conversation, name="switch_conversation"),
+    path("delete-conversation/<int:conversation_id>/", chat_view.delete_conversation, name="delete_conversation"),
 ]
+

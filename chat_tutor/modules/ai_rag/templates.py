@@ -1,6 +1,6 @@
 from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from model import Model
+from .model import Model
 
 
 class Template:

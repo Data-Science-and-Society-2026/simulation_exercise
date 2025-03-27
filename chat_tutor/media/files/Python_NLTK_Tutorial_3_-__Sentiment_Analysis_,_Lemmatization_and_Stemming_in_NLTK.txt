@@ -1,0 +1,70 @@
+Hello everyone, welcome to a new tutorial on NLTK, so I again welcome you all to programming
+knowledge as well.
+Let's start with a new tutorial on NLTK, so we shall start first with stemming and lemmatization.
+So you can type from NLTK.STEM, you can before that like you can do install this library
+NLTK.Download and you can download Word Word.
+So make sure you install this library and I can do from NLTK.STEM, you need to import
+two libraries which are quite long with the name, so one is a portasemmer, okay, portasemmer
+and another is Word,Net and lemmatizer, so lemmer,izer, okay, this is tizer, okay and
+now I'll run this file to make sure that it's right in right direction, so the library
+names are correct and this is also being downloaded, so it's perfect.
+So what I can do now, I need to create one variable, lemmatizer, you will do Word,Net,
+lemmatizer and another is a stemmer, which is going to be the stemmer, okay, so these
+are the variable which acts as a construct object to these classes, now I can use them
+to like, like I have some demo purposes, so we have some demo words above this, here you
+can see, okay, so what we can do, we can type for Word and demo words, okay and like we
+can do in stemmer.stem, Word, okay and we can do lemmatizer, lemmatizer, what, lemmatize,
+okay, Word, P, so this is just like, these are two like stemmer.stem, Word and lemmatizer.lemmatize,
+Word and V stands for Word, so basically what we are doing, I'll explain you in short, just
+I wanted to have a quick overview of the coding part, now I'll focus what this stemming and
+lemmatization does, so let's add some random words like coding, programming, okay, code,
+program and something like this, so in the left we have, like left is stem, in left we
+have the stemmer, left is the stem and in right we have the, right we have the lemmatize,
+okay, so this is how we do, so like just let's run this file, so what we are going to tell
+that basically it converts all the verbs, like we already know the verbs have already,
+like some are in present tense, some are in past tense, present, future, past, past present,
+something we all, they are on different forms, so we can say playing, happiness, going, doing,
+yes, no, I have, having, have, basically having and have a coding programming, a code programmer
+basically are very related to each other and like going or doing are similar to go, okay,
+and we are, we know they are very similar, go and in the same way doing is very similar to do,
+okay, so this is just a way of converting them into their original raw form, instead of the verb,
+verb forms they are existing which could be present past something, so let's run this file,
+so here you can see, so here you can see that play is converted to this, okay, let me do also
+print the original word, okay, so this is how we do it, so we have the order would be, this would
+be the word, them, and lemmatize, okay, and now let's run this, okay, I'll remove this, yeah,
+so let's run this, so we see, we see the verb playing is converted to play, happiness is converted
+to happy happiness, going to go, go, go, is already doing to do or do, okay, both of them convert
+to do, and yes to yeah, yes, no, having is converted to have, have is converted to have,
+because having or have meant the same thing, their original form was have, had is converted to had
+and have, okay, so basically you can see with context that lemmatization is more accurate,
+okay, than stemming, so basically both of them do the same work, programming is converted to
+program and programs is same and coding is converted to code and code, so basically in some context,
+but like both have their own advantages and disadvantages, but looking at that, like we
+can say that like in some sense, stemming is accurate, but lemmatization is accurate,
+but the both of them have to like, like it all depends on you that which result has a better
+accuracy, but both of them do the same that they convert all the verbs into their original form,
+so this is how we deal, okay, so this is the way we deal with lemmatization and stemming,
+so let's come in this, now let's move to the another one, we can do from nltk, nltk,
+nltk.sentiment import sentiment, sentiment intensity analyzer, okay,
+okay, and let's run this file to make sure that this is going in the right direction,
+so yeah, so we are like in right direction and then again I'll make an object SIA is equal
+to sentiment, sentiment intensity analyzer, I'll initialize this class and what we can do,
+I can do SIA dot polarity, polarity underscore scores, so these are three scores which is going
+to be defined and we need to find the sentence, so I'll define programming this one, okay,
+and when I run this, here you can see I'll clear this, yeah, when I run this here I can see, okay,
+this says, waiter underscore lexicon is not installed, so we can change, okay, I'll also
+nltk.download, waiter, waiter underscore lexicon, okay, and now let's run this file, so
+okay, I had run from this, okay, okay, okay, okay, just yeah, I made a mistake that I had to print
+the statement, so that's why it wasn't printing, yeah, so let's run this again, yeah, now you can
+see, so it says negative score is 0, neutral is 0.377 and positive is 0.623, this is a positive
+statement, so you can make a logic that which one is maximum, you can assign it to that,
+another way you can type a negative statement, you behaved very bad today, okay,
+let's run this statement, and here you can see that it says a negative statement of 0.487
+and neutral is 0.513, so this is how you can do this, and you can also do that this is,
+like, this is not good at all, okay, and then you can also run this, you will have the score
+with this, okay, so this is how you can predict the scores, you can try to improve the scores,
+and this is how the sentiment analyzer also works, okay, so let's, yeah, so this is how we have in
+this tutorial, so I'll catch you in the next tutorial, so thank you everyone for watching this,
+so thank you everyone, and one thing you can do, try out is that you can remove the stop words
+from this sentence and also do the, like, sentiment density analyzer, so it might give you a better,
+like, accuracy.
