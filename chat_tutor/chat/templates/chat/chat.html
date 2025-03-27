@@ -37,16 +37,12 @@
     --border:     #e0e0e0;
     --container-bg: #ffffff;
   }
-
-  /* Dark mode overrides */
   [data-theme="dark"] {
     --bg:         var(--base-dark);
     --text:       var(--text-light);
     --border:     var(--surface1);
     --container-bg: var(--surface0);
   }
-
-  /* Global Styles */
   body {
     background: var(--bg);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -54,7 +50,6 @@
     margin: 0;
     padding: 1rem;
   }
-  /* Flex container for the conversation panel and chat area */
   .chat-layout {
     display: flex;
     gap: 1rem;
@@ -62,7 +57,6 @@
     margin: 0 auto;
     height: calc(100vh - 2rem);
   }
-  /* Conversation Panel styling */
   .conversation-panel {
     flex: 0 0 300px;
     background: var(--container-bg);
@@ -127,7 +121,6 @@
   .new-conv-btn:hover {
     background: var(--red);
   }
-  /* Main Chat Container styling */
   .chat-container {
     flex: 1;
     background: var(--container-bg);
@@ -173,7 +166,13 @@
   .header-buttons .btn-info:hover {
     background: var(--pink);
   }
-  /* Chat box styling */
+  .header-buttons .btn-voice {
+    background: var(--lavender);
+    color: #fff;
+  }
+  .header-buttons .btn-voice:hover {
+    background: var(--pink);
+  }
   #chat-box {
     flex: 1;
     overflow-y: auto;
@@ -201,7 +200,6 @@
     font-size: 0.85rem;
     color: var(--overlay0);
   }
-  /* Chat Input area */
   .chat-input {
     margin-top: 1rem;
     display: flex;
@@ -242,7 +240,6 @@
   .chat-input .btn-secondary:hover {
     background: var(--overlay0);
   }
-  /* Modal styling */
   .modal-content {
     border-radius: 16px;
     border: none;
@@ -288,6 +285,10 @@
         </button>
         <button type="button" class="btn btn-info" data-toggle="modal" data-target="#disclaimerModal">
           Disclaimer
+        </button>
+        <!-- New Voice Chat Button -->
+        <button type="button" class="btn btn-voice" id="voice-chat-btn">
+          Voice Chat
         </button>
       </div>
     </div>
@@ -445,6 +446,12 @@
           aiPlaceholder.innerHTML = '<strong>AI:</strong> ';
           aiPlaceholder.appendChild(aiTextContainer);
           typeWriter(aiTextContainer, data.ai_message.content, 30);
+          // Append query time and PDF count info
+          const info = document.createElement('div');
+          info.style.fontSize = '0.75rem';
+          info.style.color = 'var(--subtext0)';
+          info.innerHTML = `(Used ${data.doc_count} PDFs, response in ${data.query_time.toFixed(2)}s)`;
+          aiPlaceholder.appendChild(info);
           chatBox.scrollTop = chatBox.scrollHeight;
           isSubmitting = false;
       })
@@ -452,6 +459,61 @@
           console.error('Error:', error);
           aiPlaceholder.innerHTML = '<strong>AI:</strong> Sorry, an error occurred.';
           isSubmitting = false;
+      });
+    });
+
+    // Voice Chat Button functionality
+    document.getElementById('voice-chat-btn').addEventListener('click', function() {
+      const btn = this;
+      btn.disabled = true;
+      btn.textContent = "Listening...";
+
+      // Prepare form data for voice chat (record_time parameter)
+      let formData = new FormData();
+      formData.append('record_time', 5); // Record for 5 seconds
+
+      const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+      fetch("{% url 'voice_chat' %}", {
+          method: "POST",
+          body: formData,
+          headers: {
+              "X-CSRFToken": csrftoken,
+              "X-Requested-With": "XMLHttpRequest"
+          },
+      })
+      .then(response => response.json())
+      .then(data => {
+          if (data.error) {
+              console.error(data.error);
+              alert("Voice Chat Error: " + data.error);
+              btn.disabled = false;
+              btn.textContent = "Voice Chat";
+              return;
+          }
+          // Append recognized voice input as a user message
+          let userDiv = document.createElement('div');
+          userDiv.className = 'message user';
+          userDiv.innerHTML = '<strong>User (via voice):</strong> ' + data.recognized_text;
+          chatBox.appendChild(userDiv);
+          // Append AI response with timing info
+          let aiDiv = document.createElement('div');
+          aiDiv.className = 'message ai';
+          aiDiv.innerHTML = '<strong>AI:</strong> ' + data.ai_text +
+            '<br><small>(Used ' + data.doc_count + ' PDFs, response in ' + data.query_time.toFixed(2) + 's)</small>';
+          chatBox.appendChild(aiDiv);
+          chatBox.scrollTop = chatBox.scrollHeight;
+          // Play the generated audio
+          let audio = new Audio(data.audio_url);
+          audio.play();
+          btn.disabled = false;
+          btn.textContent = "Voice Chat";
+      })
+      .catch(error => {
+          console.error("Error:", error);
+          alert("Error during voice chat.");
+          btn.disabled = false;
+          btn.textContent = "Voice Chat";
       });
     });
 

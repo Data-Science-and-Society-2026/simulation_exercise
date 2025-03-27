@@ -3,6 +3,7 @@ from django.urls import path
 
 
 from chat import chat_view, setup_view
+from chat import tts_view
 
 urlpatterns = [
     path("", chat_view.chat_view, name="chat"),
@@ -16,6 +17,7 @@ urlpatterns = [
     path("send_message/", chat_view.send_message, name="send_message"),
     path("initial_setup/", setup_view.init_conversation, name="initial_setup"),
     path("model_selection/", setup_view.model_selection, name="model_selection"),
+    path("voice_chat/", tts_view.voice_chat, name="voice_chat"),
     path("switch-conversation/<int:conversation_id>/", chat_view.switch_conversation, name="switch_conversation"),
     path("delete-conversation/<int:conversation_id>/", chat_view.delete_conversation, name="delete_conversation"),
 ]
