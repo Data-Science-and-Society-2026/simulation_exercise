@@ -166,6 +166,7 @@
   .header-buttons .btn-info:hover {
     background: var(--pink);
   }
+  /* New Voice Chat button styling */
   .header-buttons .btn-voice {
     background: var(--lavender);
     color: #fff;
@@ -286,9 +287,9 @@
         <button type="button" class="btn btn-info" data-toggle="modal" data-target="#disclaimerModal">
           Disclaimer
         </button>
-        <!-- New Voice Chat Button -->
+        <!-- New Voice Chat Button (Toggle Recording) -->
         <button type="button" class="btn btn-voice" id="voice-chat-btn">
-          Voice Chat
+          Start Voice Chat
         </button>
       </div>
     </div>
@@ -307,7 +308,6 @@
       <input type="text" name="message" id="user-input"
              class="form-control flex-grow-1" placeholder="Type your message..." autocomplete="off">
       <button type="submit" class="btn btn-primary">Send</button>
-      <button type="button" id="tts-btn" class="btn btn-secondary">TTS Mode</button>
     </form>
   </div>
 </div>
@@ -356,6 +356,11 @@
 {% endblock %}
 {% block extra_js %}
 <script>
+  // Variables for voice recording
+  let mediaRecorder;
+  let audioChunks = [];
+  let isRecording = false;
+
   // Function to create a "typing" indicator for the AI response
   function showTypingIndicator() {
     const indicator = document.createElement('div');
@@ -378,15 +383,13 @@
     type();
   }
 
-  // Prevent duplicate submissions using a flag
+  // Standard chat form submission (text input)
   let isSubmitting = false;
-
   document.addEventListener('DOMContentLoaded', function() {
     const chatForm = document.getElementById('chat-form');
     const userInput = document.getElementById('user-input');
     const chatBox = document.getElementById('chat-box');
 
-    // Trigger form submission when Enter is pressed (without adding a newline)
     userInput.addEventListener('keydown', function(e) {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
@@ -396,7 +399,7 @@
 
     chatForm.addEventListener('submit', function(e) {
       e.preventDefault();
-      if (isSubmitting) return; // avoid double submission
+      if (isSubmitting) return;
       isSubmitting = true;
 
       const message = userInput.value.trim();
@@ -405,22 +408,17 @@
         return;
       }
 
-      // Immediately append the user's message to the chat history
       let userDiv = document.createElement('div');
       userDiv.className = 'message user';
       userDiv.innerHTML = '<strong>User:</strong> ' + message;
       chatBox.appendChild(userDiv);
       chatBox.scrollTop = chatBox.scrollHeight;
-
-      // Clear the input immediately
       userInput.value = '';
 
-      // Append a placeholder for the AI response
       const aiPlaceholder = showTypingIndicator();
       chatBox.appendChild(aiPlaceholder);
       chatBox.scrollTop = chatBox.scrollHeight;
 
-      // Prepare the form data for the fetch call
       let formData = new FormData();
       formData.append('message', message);
       const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
@@ -441,12 +439,10 @@
               isSubmitting = false;
               return;
           }
-          // Replace the placeholder with the actual AI message using typewriter effect
           const aiTextContainer = document.createElement('span');
           aiPlaceholder.innerHTML = '<strong>AI:</strong> ';
           aiPlaceholder.appendChild(aiTextContainer);
           typeWriter(aiTextContainer, data.ai_message.content, 30);
-          // Append query time and PDF count info
           const info = document.createElement('div');
           info.style.fontSize = '0.75rem';
           info.style.color = 'var(--subtext0)';
@@ -462,64 +458,86 @@
       });
     });
 
-    // Voice Chat Button functionality
-    document.getElementById('voice-chat-btn').addEventListener('click', function() {
+    // Voice Chat Button functionality using MediaRecorder
+    const voiceBtn = document.getElementById('voice-chat-btn');
+    voiceBtn.addEventListener('click', async function() {
       const btn = this;
-      btn.disabled = true;
-      btn.textContent = "Listening...";
-
-      // Prepare form data for voice chat (record_time parameter)
-      let formData = new FormData();
-      formData.append('record_time', 5); // Record for 5 seconds
-
       const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-      fetch("{% url 'voice_chat' %}", {
-          method: "POST",
-          body: formData,
-          headers: {
-              "X-CSRFToken": csrftoken,
-              "X-Requested-With": "XMLHttpRequest"
-          },
-      })
-      .then(response => response.json())
-      .then(data => {
-          if (data.error) {
-              console.error(data.error);
-              alert("Voice Chat Error: " + data.error);
+      // If not recording, start recording
+      if (!isRecording) {
+        // Request microphone access
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+          mediaRecorder.addEventListener("dataavailable", event => {
+            if (event.data.size > 0) {
+              audioChunks.push(event.data);
+            }
+          });
+          mediaRecorder.addEventListener("stop", () => {
+            // Create a blob from the recorded audio
+            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+            // Create form data with the audio file
+            let formData = new FormData();
+            formData.append('audio', audioBlob);
+            // Send the audio to the voice_chat endpoint
+            fetch("{% url 'voice_chat' %}", {
+              method: "POST",
+              body: formData,
+              headers: {
+                "X-CSRFToken": csrftoken,
+                "X-Requested-With": "XMLHttpRequest"
+              },
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.error) {
+                console.error(data.error);
+                alert("Voice Chat Error: " + data.error);
+                btn.disabled = false;
+                btn.textContent = "Start Voice Chat";
+                return;
+              }
+              // Append recognized voice text as a user message
+              let userDiv = document.createElement('div');
+              userDiv.className = 'message user';
+              userDiv.innerHTML = '<strong>User (via voice):</strong> ' + data.recognized_text;
+              chatBox.appendChild(userDiv);
+              // Append AI response with timing info
+              let aiDiv = document.createElement('div');
+              aiDiv.className = 'message ai';
+              aiDiv.innerHTML = '<strong>AI:</strong> ' + data.ai_text +
+                '<br><small>(Used ' + data.doc_count + ' PDFs, response in ' + data.query_time.toFixed(2) + 's)</small>';
+              chatBox.appendChild(aiDiv);
+              chatBox.scrollTop = chatBox.scrollHeight;
+              // Play the generated audio
+              let audio = new Audio(data.audio_url);
+              audio.play();
               btn.disabled = false;
-              btn.textContent = "Voice Chat";
-              return;
-          }
-          // Append recognized voice input as a user message
-          let userDiv = document.createElement('div');
-          userDiv.className = 'message user';
-          userDiv.innerHTML = '<strong>User (via voice):</strong> ' + data.recognized_text;
-          chatBox.appendChild(userDiv);
-          // Append AI response with timing info
-          let aiDiv = document.createElement('div');
-          aiDiv.className = 'message ai';
-          aiDiv.innerHTML = '<strong>AI:</strong> ' + data.ai_text +
-            '<br><small>(Used ' + data.doc_count + ' PDFs, response in ' + data.query_time.toFixed(2) + 's)</small>';
-          chatBox.appendChild(aiDiv);
-          chatBox.scrollTop = chatBox.scrollHeight;
-          // Play the generated audio
-          let audio = new Audio(data.audio_url);
-          audio.play();
-          btn.disabled = false;
-          btn.textContent = "Voice Chat";
-      })
-      .catch(error => {
-          console.error("Error:", error);
-          alert("Error during voice chat.");
-          btn.disabled = false;
-          btn.textContent = "Voice Chat";
-      });
-    });
-
-    // TTS button dummy action
-    document.getElementById('tts-btn').addEventListener('click', function() {
-        alert('TTS mode toggled (dummy action).');
+              btn.textContent = "Start Voice Chat";
+            })
+            .catch(error => {
+              console.error("Error:", error);
+              alert("Error during voice chat.");
+              btn.disabled = false;
+              btn.textContent = "Start Voice Chat";
+            });
+          });
+          mediaRecorder.start();
+          isRecording = true;
+          btn.textContent = "Stop Recording";
+        } catch (err) {
+          console.error("Microphone access error:", err);
+          alert("Error accessing microphone.");
+        }
+      } else {
+        // If already recording, stop recording
+        mediaRecorder.stop();
+        isRecording = false;
+        btn.textContent = "Start Voice Chat";
+      }
     });
   });
 </script>
